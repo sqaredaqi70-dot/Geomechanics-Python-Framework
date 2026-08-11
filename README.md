@@ -70,3 +70,85 @@ python generate_synthetic_data.py
 
 # Run the 1D MEM example
 python modules/geomechanics_1d_mem/src/main.py
+
+System Requirements
+Python: 3.9 or higher
+RAM: 4 GB minimum (8 GB recommended for 3D visualization)
+OS: Windows, Linux, or macOS
+📊 Data Availability Statement
+The real field data used for developing this framework cannot be shared due to confidentiality agreements with data providers. However, this repository provides:
+
+✅ Synthetic sample data that mimics realistic wireline log characteristics
+✅ Complete workflow code applicable to any similar dataset
+✅ Detailed methodology documentation for full reproducibility of the approach
+The synthetic data allows users to test and understand the workflow, though absolute values will naturally differ from real-field applications.
+
+⚖️ Licensing
+This project uses a dual-licensing model to serve both academic and commercial users:
+
+🎓 Free for Academic & Research Use (AGPL-3.0)
+Free of charge for:
+
+Universities and research institutes
+Individual researchers and students
+Non-commercial academic research
+Educational purposes
+📄 See LICENSE-ACADEMIC.md for detailed terms.
+
+🏭 Commercial License Required for Industrial Use
+Any commercial or industrial use requires a separate paid license, including:
+
+Oil & gas operations (national/international oil companies)
+Consulting services and contractors
+Integration into commercial software
+Use by for-profit organizations
+📄 See LICENSE-COMMERCIAL.md for details.
+
+📧 Commercial licensing inquiries: sqaredaqi70@gmail.com
+📄 Citation
+If you use this framework in your research, please cite it as follows:
+
+bibtex
+
+@software{aqi2024geomechframework,
+  author  = {Aqi, Sqared},
+  title   = {Geomechanics Python Framework: A Comprehensive Toolkit
+             for Petroleum Geomechanics and Subsurface Engineering},
+  year    = {2024},
+  version = {1.0.0},
+  url     = {https://github.com/sqaredaqi70-dot/Geomechanics-Python-Framework},
+  license = {AGPL-3.0}
+}
+👤 Author
+Saeed Gharedaghi
+
+📧 Email: sqaredaqi70@gmail.com
+💻 GitHub: @sqaredaqi70-dot
+🎓 Field: Petroleum Geomechanics & Reservoir Engineering
+🤝 Contributing
+Contributions are welcome and greatly appreciated! Please:
+
+Fork the repository
+Create a feature branch (git checkout -b feature/AmazingFeature)
+Commit your changes (git commit -m 'Add AmazingFeature')
+Push to the branch (git push origin feature/AmazingFeature)
+Open a Pull Request
+🐛 Bug Reports & Feature Requests
+Found a bug or have a feature idea? Please open an issue.
+
+⚠️ Disclaimer
+This software is provided "as is" for research and educational purposes without warranty of any kind. For operational drilling, completion, or reservoir management decisions, please consult qualified petroleum engineers and geoscientists. The author assumes no liability for damages arising from the use of this software.
+
+🌟 Support the Project
+If you find this framework useful for your work, please consider:
+
+⭐ Starring the repository
+🍴 Forking and contributing
+📢 Sharing with your colleagues
+📅 Roadmap
+ v1.0 — 1D MEM for carbonate reservoirs
+ v1.1 — Enhanced UCS methods and additional lithologies
+ v2.0 — Land subsidence analysis module
+ v2.5 — 3D reservoir geomechanics
+ v3.0 — Advanced 3D wellbore stability with deviation
+<p align="center"> <sub>Made with ❤️ for the geomechanics community</sub><br> <sub>Copyright © 2024 Saeed Gharedaghi. All rights reserved.</sub> </p> ```
