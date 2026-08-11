@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Geomechanics Python Framework"
+abstract: "A comprehensive Python framework for petroleum geomechanics, 1D Mechanical Earth Modeling, wellbore stability analysis, and subsurface engineering."
+type: software
+authors:
+  - family-names: "Aqi"
+    given-names: "Sqared"
+    email: "sqaredaqi70@gmail.com"
+version: "1.0.0"
+date-released: "2024-01-01"
+license: "AGPL-3.0-or-later"
+repository-code: "https://github.com/sqaredaqi70-dot/Geomechanics-Python-Framework"
+keywords:
+  - "geomechanics"
+  - "petroleum engineering"
+  - "mechanical earth model"
+  - "wellbore stability"
+  - "carbonate reservoirs"
+  - "asmari formation"
+  - "python"
+  - "in-situ stress"
+  - "pore pressure"
