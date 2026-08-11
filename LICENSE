@@ -659,3 +659,50 @@ specific requirements.
 if any, to sign a "copyright disclaimer" for the program, if necessary.
 For more information on this, and how to apply and follow the GNU AGPL, see
 <https://www.gnu.org/licenses/>.
+
+═══════════════════════════════════════════════════════════════════════
+
+                       ADDITIONAL TERMS
+                     DUAL LICENSING NOTICE
+
+═══════════════════════════════════════════════════════════════════════
+
+This software is dual-licensed:
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│  1. ACADEMIC / RESEARCH USE  (FREE)                                 │
+│                                                                     │
+│     Licensed under GNU AGPL-3.0 (above).                            │
+│                                                                     │
+│     Universities, research institutes, individual researchers,      │
+│     and students may use this software free of charge for           │
+│     non-commercial academic research and educational purposes.      │
+│                                                                     │
+│     See LICENSE-ACADEMIC.md for detailed terms.                     │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│  2. COMMERCIAL / INDUSTRIAL USE  (PAID LICENSE REQUIRED)            │
+│                                                                     │
+│     Any commercial or industrial use — including but not            │
+│     limited to:                                                     │
+│                                                                     │
+│       • Use in oil & gas operations                                 │
+│       • Consulting services                                         │
+│       • Integration into commercial software                        │
+│       • Use by for-profit organizations                             │
+│       • SaaS platforms                                              │
+│                                                                     │
+│     requires a separate commercial license.                         │
+│                                                                     │
+│     To obtain a commercial license:                                 │
+│     📧 Email: sqaredaqi70@gmail.com                                 │
+│                                                                     │
+│     See LICENSE-COMMERCIAL.md for detailed terms.                   │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+Copyright (c) 2024 Sqared Aqi. All rights reserved.
