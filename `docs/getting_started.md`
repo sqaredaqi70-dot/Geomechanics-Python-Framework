@@ -1,0 +1,114 @@
+```markdown
+# Getting Started
+
+Welcome to the **Geomechanics Python Framework**! This guide will help you install and run your first analysis.
+
+---
+
+## 📋 Prerequisites
+
+- **Python 3.9** or higher
+- **4 GB RAM** minimum (8 GB recommended for 3D visualization)
+- **500 MB** disk space
+- **Windows**, **Linux**, or **macOS**
+
+---
+
+## 🔧 Installation
+
+### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/sqaredaqi70-dot/Geomechanics-Python-Framework.git
+cd Geomechanics-Python-Framework
+Step 2: Create a Virtual Environment (Recommended)
+Bash
+
+# Linux / macOS
+python -m venv venv
+source venv/bin/activate
+
+# Windows (PowerShell)
+python -m venv venv
+venv\Scripts\Activate.ps1
+
+# Windows (CMD)
+python -m venv venv
+venv\Scripts\activate.bat
+Step 3: Install Dependencies
+Bash
+
+pip install -r requirements.txt
+Step 4: Generate Sample Data
+Bash
+
+python generate_synthetic_data.py
+This creates synthetic LAS files in data/sample/.
+
+🚀 Running Your First Analysis
+Option 1: 1D MEM Module
+Bash
+
+python modules/geomechanics_1d_mem/src/main.py
+Output figures will be saved to output/figures/.
+
+Option 2: Interactive Jupyter Notebook
+Bash
+
+jupyter notebook modules/geomechanics_1d_mem/notebooks/example.ipynb
+📂 Understanding the Output
+After running the analysis, you'll find:
+
+text
+
+output/
+├── figures/               2D plots (profiles, cross-plots)
+├── figures_3D/            3D visualizations
+├── figures_combined/      Multi-panel composite figures
+└── terminal_log/          Execution logs
+🔄 Using Your Own Data
+Step 1: Prepare Your LAS Files
+Ensure your LAS files contain:
+
+Depth (DEPT)
+Gamma ray (GR)
+Sonic (DT, DTS)
+Density (RHOB)
+Stress and geomechanics curves (if available)
+Step 2: Update Configuration
+Edit modules/geomechanics_1d_mem/src/config.py:
+
+Python
+
+WELL_NAMES = ['Your_Well_1', 'Your_Well_2', ...]
+DATA_DIR = Path("path/to/your/data")
+Step 3: Run
+Bash
+
+python modules/geomechanics_1d_mem/src/main.py
+❓ Troubleshooting
+Issue: ModuleNotFoundError: No module named 'lasio'
+Solution:
+
+Bash
+
+pip install lasio
+Issue: LAS file not loading correctly
+Solution: Check that your LAS file follows LAS 2.0 or 3.0 format. Try opening it in lasio:
+
+Python
+
+import lasio
+las = lasio.read('your_file.las')
+print(las.curves)
+Issue: Memory error during 3D visualization
+Solution: Reduce subsample rate in visualization settings, or upgrade RAM.
+
+📚 Next Steps
+📖 Read the Modules Overview
+🔬 Study the Methodology
+🤝 Learn how to Contribute
+📧 Support
+Questions? Open an issue or contact:
+
+📧 sqaredaqi70@gmail.com
