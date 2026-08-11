@@ -216,3 +216,37 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ══════════════════════════════════════════════════════════════
+# CUSTOM ADDITIONS FOR THIS PROJECT
+# ══════════════════════════════════════════════════════════════
+
+# Real data (NEVER commit to public repo!)
+data/raw/
+data/real/
+data/wells/*.las
+data/private/
+!data/sample/*.las
+
+# Output directories
+output/
+figures/
+figures_3D/
+figures_combined/
+terminal_log/
+
+# Temporary files
+_tmp_*/
+*_tmp/
+tmp/
+
+# Petrel exports (real field data)
+petrel_exported/
+horizons_maps/
+
+# Personal notes
+notes/
+*.private.md
+
+# Run directories (from Step_XX scripts)
+*__run_*/
