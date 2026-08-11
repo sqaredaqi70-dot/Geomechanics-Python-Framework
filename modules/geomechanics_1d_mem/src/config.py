@@ -1,7 +1,4 @@
-"""
-═══════════════════════════════════════════════════════════════════════
                     CONFIGURATION MODULE
-═══════════════════════════════════════════════════════════════════════
 
 Centralized configuration for the 1D Mechanical Earth Model workflow.
 
@@ -12,15 +9,11 @@ in their local copy (do not commit real data or paths to public repos).
 Author:  Sqared Aqi
 Contact: sqaredaqi70@gmail.com
 License: AGPL-3.0 (Academic) / Commercial (see LICENSE files)
-═══════════════════════════════════════════════════════════════════════
-"""
 
 from pathlib import Path
 
 
-# ══════════════════════════════════════════════════════════════
 # PROJECT PATHS
-# ══════════════════════════════════════════════════════════════
 # Locate project root (three levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
@@ -34,10 +27,7 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 (OUTPUT_DIR / "figures_3D").mkdir(exist_ok=True)
 (OUTPUT_DIR / "figures_combined").mkdir(exist_ok=True)
 
-
-# ══════════════════════════════════════════════════════════════
 # WELL CONFIGURATION (ANONYMIZED)
-# ══════════════════════════════════════════════════════════════
 # Wells are labeled generically to preserve confidentiality.
 # For real-data applications, update these lists locally.
 
@@ -52,9 +42,7 @@ WELL_POSITIONS = {
 }
 
 
-# ══════════════════════════════════════════════════════════════
 # GEOLOGICAL ZONES
-# ══════════════════════════════════════════════════════════════
 ZONE_ORDER = ['Ghar', 'Asmari-A', 'Asmari-B', 'Jahrum']
 
 ZONE_MARKERS = {
@@ -68,9 +56,7 @@ RESERVOIR_TOP  = 'Ghar_C.R.'
 RESERVOIR_BASE = 'Pabdeh'
 
 
-# ══════════════════════════════════════════════════════════════
 # ENGINEERING UNIT CONVERSIONS
-# ══════════════════════════════════════════════════════════════
 G_MS2         = 9.81         # Gravity acceleration (m/s²)
 MPA_TO_PSI    = 145.0377     # MPa → psi
 GPA_TO_MPSI   = 0.145038     # GPa → Mpsi
@@ -80,9 +66,7 @@ GCC_TO_PPG    = 8.345404     # g/cc → ppg
 PPG_TO_PSIFT  = 0.052        # ppg → psi/ft
 
 
-# ══════════════════════════════════════════════════════════════
 # MODEL ASSUMPTIONS
-# ══════════════════════════════════════════════════════════════
 RHO_WATER          = 1.025   # Formation water density (g/cc)
 RHO_FALLBACK       = 2.4     # Fallback density if RHOB missing (g/cc)
 T0_FRACTION        = 0.10    # Tensile strength = T0_FRACTION × UCS
@@ -90,9 +74,7 @@ MW_SAFETY_MARGIN   = 0.5     # Mud weight safety margin (ppg)
 SHMAX_AZIMUTH      = 35.0    # Regional SHmax azimuth (degrees)
 
 
-# ══════════════════════════════════════════════════════════════
 # STRESS AND STRENGTH COLUMN NAMES (kPa in LAS files)
-# ══════════════════════════════════════════════════════════════
 STRESS_KPA_COLUMNS = [
     'UCS_FINAL', 'UCS_FINAL_70', 'UCS_FINAL_80', 'UCS_FINAL_90',
     'UCS_FINAL_110', 'UCS_FINAL_120',
@@ -105,9 +87,7 @@ STRESS_KPA_COLUMNS = [
 ]
 
 
-# ══════════════════════════════════════════════════════════════
 # UCS ESTIMATION METHODS
-# ══════════════════════════════════════════════════════════════
 UCS_METHODS = {
     'UCS_HORSRUD': ('Horsrud (2001)',   '#1f77b4'),
     'UCS_MCNALLY': ('McNally (1987)',   '#ff7f0e'),
@@ -118,9 +98,7 @@ UCS_METHODS = {
 }
 
 
-# ══════════════════════════════════════════════════════════════
 # VISUALIZATION
-# ══════════════════════════════════════════════════════════════
 WELL_COLORS = {
     'Well_A': '#e41a1c',  # red
     'Well_B': '#377eb8',  # blue
