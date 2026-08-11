@@ -1,5 +1,3 @@
-4. محتوا:
-
 ```markdown
 # Commercial License
 
@@ -131,4 +129,4 @@ For all commercial licensing inquiries:
 
 **Response time:** 3-5 business days
 
-Copyright © 2024 Sqared Aqi. All rights reserved.
+Copyright © 2024 Saeed Gharedaghi. All rights reserved.
