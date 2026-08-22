@@ -25,3 +25,13 @@ subsidence_cm = calculate_max_subsidence(
     alpha_biot=0.825
 )
 print(f"Max subsidence: {subsidence_cm:.3f} cm")
+📊 Generate Synthetic Data
+Bash
+
+python modules/subsidence_analysis/data/generate_synthetic_grid.py
+📚 Reference
+Geertsma, J. (1973). "Land subsidence above compacting oil and gas reservoirs."
+Journal of Petroleum Technology, 25(06), 734-744.
+
+⚖️ License
+Dual License (AGPL-3.0 for academic / Commercial license for industrial use)
