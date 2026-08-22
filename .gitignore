@@ -218,35 +218,57 @@ __marimo__/
 .streamlit/secrets.toml
 
 # ══════════════════════════════════════════════════════════════
-# CUSTOM ADDITIONS FOR THIS PROJECT
+# CUSTOM ADDITIONS FOR GEOMECHANICS FRAMEWORK (SECURITY & DATA PRIVACY)
 # ══════════════════════════════════════════════════════════════
 
-# Real data (NEVER commit to public repo!)
+# 🔒 1. Extension-level Security Filters (Ignores confidential formats everywhere)
+*.las
+*.segy
+*.sgy
+*.cps3
+*.zmap
+*.grd
+*.nc
+*.h5
+*.hdf5
+*.npy
+*.npz
+
+# 📁 2. Real Field Data Directories (NEVER commit to public repo!)
 data/raw/
 data/real/
-data/wells/*.las
+data/wells/
 data/private/
-!data/sample/*.las
+petrel_exported/
+petrel exported/
+horizons_maps/
+Production_Data/
+seismic/
 
-# Output directories
+# 📊 3. Generated Results & Local Output Folders
 output/
+results/
 figures/
 figures_3D/
 figures_combined/
+tables_csv/
+tables_png/
 terminal_log/
+reports/
+manifests/
+numpy_grids/
+*__run_*/
 
-# Temporary files
+# 🧹 4. Temporary Execution Files
 _tmp_*/
 *_tmp/
 tmp/
+*.log
+*.txt
+!requirements.txt
+!README.md
+!LICENSE*.md
 
-# Petrel exports (real field data)
-petrel_exported/
-horizons_maps/
-
-# Personal notes
+# 📝 5. Personal Notes & Internal Documentation
 notes/
 *.private.md
-
-# Run directories (from Step_XX scripts)
-*__run_*/
