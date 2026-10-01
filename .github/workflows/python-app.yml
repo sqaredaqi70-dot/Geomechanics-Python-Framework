@@ -1,1 +1,43 @@
+name: Python Application CI
 
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Test Global Synthetic Data Generator
+      run: |
+        python generate_synthetic_data.py
+
+    - name: Test Fault Reactivation Module
+      run: |
+        python modules/fault_reactivation/fault_reactivation_analysis.py
+        python modules/fault_reactivation/monte_carlo_analysis.py
+
+    - name: Test Rock Physics Module
+      run: |
+        python modules/rock_physics/rock_physics_analysis.py
+        python modules/rock_physics/fluid_substitution_contacts.py
