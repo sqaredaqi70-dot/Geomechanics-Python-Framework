@@ -27,18 +27,17 @@ The computational engines implement methodologies consistent with peer-reviewed 
 
 ---
 
-## 📦 Included Modules & Scientific Roadmap
+### 📦 Included Modules & Scientific Roadmap
 
 | # | Module | Core Methodology & Features | Status | Version |
 |---|--------|---------------------------|:------:|:-------:|
-| 1 | 🏔️ **1D MEM** | 1D Mechanical Earth Modeling — multi-method UCS (Horsrud, McNally, CDE), elastic moduli, overburden & in-situ stress ($S_v$, $S_{Hmax}$, $S_{hmin}$, $P_p$), Mohr-Coulomb failure | ✅ Complete | `v1.0` |
-| 2 | 🌍 **Subsidence Analysis** | Geertsma (1973) poroelastic disc, Gibson/Terzaghi 1D consolidation, Nucleus of Strain DIF kernel, Monte Carlo + Sobol/Tornado sensitivity | ✅ Complete | `v2.0` |
-| 3 | 🎯 **3D Reservoir Geomechanics** | Seismic-driven 3D properties ($E$, $\nu$, UCS) with dynamic-to-static well calibration, 3D stress tensor ($S_v$, $P_p$, $S_{hmin}$, $S_{Hmax}$) | ✅ Complete | `v2.5` |
-| 4 | ⚡ **Fault Reactivation** | 3D traction resolution ($T_s$, $T_d$, CFF), Andersonian taxonomy, 10k Monte Carlo PoF, global Sobol indices ($S_1$, $S_T$), safe $\Delta P_p$ limits | ✅ Complete | `v3.0` |
-| 5 | 🔬 **Rock Physics** | LMR ($\lambda\rho$–$\mu\rho$) discrimination, Gassmann fluid substitution (brine/oil/gas), VRH bounds, 3D fluid contact surface mapping | ✅ Complete | `v3.0` |
-| 6 | 🧪 **UCS Calibration & ML** | 11 published correlation benchmark, zone-specific power-laws, ensemble ML (RF, GB, XGB) with honest LOWO cross-validation | ✅ Complete | `v3.0` |
-| 7 | 📊 **Dynamic-to-Static** | Pseudo-static linear scaling, Leave-One-Well-Out transfer test, Moving Block Bootstrap (MBB) autocorrelation correction, $N_{eff}$ estimation | ✅ Complete | `v3.0` |
-| 8 | 🔧 **Wellbore Stability 3D** | Deviated trajectory optimization, Kirsch cylinder solutions, mud weight window, shear breakout / tensile fracture zonation | 📋 Planned | `v3.5` |
+| 1 | 🏔️ **1D MEM & Wellbore Stability** | 1D Mechanical Earth Model, Density Integration ($S_v$), In-situ Stresses ($S_v, S_{Hmax}, S_{hmin}, P_p$), Stress Polygon ($K_0, k_H$), Kirsch Equations, Mud Weight Window ($MW_{col}, MW_{mod}, MW_{frc}$), Mohr-Coulomb Envelopes | ✅ Complete | `v1.0` |
+| 2 | 🌍 **Subsidence Engine** | Geertsma (1973) poroelastic disc, Gibson 1D consolidation, Nucleus of Strain DIF kernel, Monte Carlo + Sobol sensitivity | ✅ Complete | `v2.0` |
+| 3 | 🎯 **3D Reservoir Geomechanics** | Seismic-driven 3D properties ($E, \nu, \text{UCS}$) with dynamic-to-static well calibration & 3D stress field | ✅ Complete | `v2.5` |
+| 4 | ⚡ **Fault Reactivation** | 3D traction resolution ($T_s, T_d, CFF$), Andersonian taxonomy, 10k Monte Carlo PoF, global Sobol indices, safe $\Delta P_p$ limits | ✅ Complete | `v3.0` |
+| 5 | 🔬 **Rock Physics** | LMR ($\lambda\rho - \mu\rho$) discrimination, Gassmann fluid substitution, VRH bounds, 3D fluid contact mapping | ✅ Complete | `v3.0` |
+| 6 | 🧪 **UCS Calibration & ML** | 11 published correlation benchmark, zone-specific power-laws, ensemble ML (RF, GB, XGB) with LOWO validation | ✅ Complete | `v3.0` |
+| 7 | 📊 **Dynamic-to-Static** | Pseudo-static linear scaling, Leave-One-Well-Out transfer test, Moving Block Bootstrap (MBB) autocorrelation correction | ✅ Complete | `v3.0` |
 
 ---
 
