@@ -221,10 +221,13 @@ __marimo__/
 # CUSTOM ADDITIONS FOR GEOMECHANICS FRAMEWORK (SECURITY & DATA PRIVACY)
 # ══════════════════════════════════════════════════════════════
 
-# 🔒 1. Extension-level Security Filters (Ignores confidential formats everywhere)
+# 🔒 1. Extension-level Security Filters (Confidential formats everywhere)
 *.las
+*.LAS
 *.segy
+*.SEGY
 *.sgy
+*.SGY
 *.cps3
 *.zmap
 *.grd
@@ -239,35 +242,55 @@ data/raw/
 data/real/
 data/wells/
 data/private/
+modules/*/data/raw/
+modules/*/data/real/
+modules/*/data/private/
 petrel_exported/
 petrel exported/
 horizons_maps/
 Production_Data/
 seismic/
 
-# 📊 3. Generated Results & Local Output Folders
+# 📊 3. Generated Results & Local Output Folders (Plural & Wildcards)
 output/
+outputs/
+*/output/
+*/outputs/
 results/
+*/results/
 figures/
-figures_3D/
-figures_combined/
+figures_*/
+*/figures/
+*/figures_*/
+tables_*/
+*/tables_*/
 tables_csv/
 tables_png/
+terminal_output/
 terminal_log/
 reports/
+*/reports/
 manifests/
 numpy_grids/
+numpy_arrays/
+*/numpy_grids/
+*/numpy_arrays/
 *__run_*/
+run_*/
+*_run_*/
 
-# 🧹 4. Temporary Execution Files
+# 🧹 4. Temporary Execution Files & Logs
 _tmp_*/
 *_tmp/
 tmp/
 *.log
+logs/
+*/logs/
 *.txt
 !requirements.txt
 !README.md
 !LICENSE*.md
+!CITATION.cff
 
 # 📝 5. Personal Notes & Internal Documentation
 notes/
