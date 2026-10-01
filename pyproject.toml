@@ -1,29 +1,31 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "geomechanics-framework"
+name = "geomechanics-python-framework"
 version = "3.0.0"
 authors = [
-  { name="Saeed Gharedaghi", email="sqaredaqi70@gmail.com" },
+    { name = "Saeed Gharedaghi", email = "sqaredaqi70@gmail.com" }
 ]
-description = "A comprehensive Python framework for petroleum geomechanics, 3D reservoir earth modeling, wellbore stability, and subsidence analysis."
+description = "A Comprehensive Python Framework for Petroleum Geomechanics, 1D/3D Earth Modeling, Rock Physics, Fault Reactivation, and Carbonate Characterization."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "License :: OSI Approved :: Affero General Public License v3 (AGPLv3)",
     "Operating System :: OS Independent",
-    "Topic :: Scientific/Engineering :: Physics",
+    "Development Status :: 5 - Production/Stable",
+    "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "numpy>=1.21.0",
-    "pandas>=1.3.0",
-    "scipy>=1.7.0",
-    "matplotlib>=3.4.0",
-    "lasio>=0.29.0",
-    "scikit-learn>=0.24.0",
+    "numpy>=1.22.0",
+    "scipy>=1.8.0",
+    "pandas>=1.4.0",
+    "matplotlib>=3.5.0",
+    "scikit-learn>=1.0.0",
+    "xgboost>=1.6.0",
+    "lasio>=0.30"
 ]
 
 [project.urls]
