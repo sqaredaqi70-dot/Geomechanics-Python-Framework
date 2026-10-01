@@ -1,0 +1,489 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+fluid_substitution_contacts.py
+───────────────────────────────────────────────────────────────────────────────
+Gassmann Fluid Substitution Engine & 3D Fluid Contact Mapping
+Optimized for Geomechanics Python Framework (GitHub Release Version)
+
+Calculates saturated bulk modulus shift, acoustic velocity response, 
+and imports structural CPS3 contours for 3D fluid contact zonation.
+"""
+
+import sys
+import shutil
+import warnings
+from pathlib import Path
+from datetime import datetime
+
+import numpy as np
+import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
+
+warnings.filterwarnings('ignore')
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. CONSTANTS & ANONYMIZATION CONFIG
+# ─────────────────────────────────────────────────────────────────────────────
+FIELD_NAME_ANON = "SW Persian Gulf Representative Offshore Field"
+WELL_ALIASES = {
+    'Well-01': 'Well-A', 'Well-05': 'Well-B', 'Well-10': 'Well-C',
+    'Well_01': 'Well-A', 'Well_05': 'Well-B', 'Well_10': 'Well-C'
+}
+COLORS = {'Well-A': '#D95F02', 'Well-B': '#7570B3', 'Well-C': '#1B9E77'}
+ZCOL = {
+    'Ghar': '#2CA02C', 
+    'Asmari-A': '#D62728', 
+    'Asmari-B': '#1F77B4', 
+    'Jahrum': '#FF7F0E', 
+    'Undiff.': '#7F7F7F'
+}
+
+M_TO_FT = 3.28084
+KPA_TO_PSI = 0.1450377
+
+def anon(w):
+    s = str(w)
+    for r, a in WELL_ALIASES.items():
+        s = s.replace(r, a)
+    return s
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. PORTABLE PATHS SETUP
+# ─────────────────────────────────────────────────────────────────────────────
+RUN_TS = datetime.now().strftime("%Y%m%d_%H%M%S")
+SCRIPT_DIR = Path(__file__).resolve().parent
+OUTPUT_DIR = SCRIPT_DIR / "outputs"
+DATA_DIR = SCRIPT_DIR / "data"
+
+FIG_DIR = OUTPUT_DIR / "figures"
+CSV_DIR = OUTPUT_DIR / "tables_csv"
+TXT_DIR = OUTPUT_DIR / "reports"
+LOG_DIR = OUTPUT_DIR / "logs"
+NPY_DIR = OUTPUT_DIR / "numpy_grids"
+
+for d in [OUTPUT_DIR, FIG_DIR, CSV_DIR, TXT_DIR, LOG_DIR, NPY_DIR, DATA_DIR]:
+    d.mkdir(parents=True, exist_ok=True)
+
+class SessionLogger:
+    def __init__(self, fp):
+        self.terminal = sys.stdout
+        self.log = open(fp, 'w', encoding='utf-8')
+    def write(self, m):
+        self.terminal.write(m)
+        self.log.write(m)
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
+
+sys.stdout = SessionLogger(str(LOG_DIR / "fluid_substitution_session.log"))
+
+# Matplotlib Publication-Style Configuration
+plt.rcParams.update({
+    'font.family': 'serif',
+    'font.serif': ['Times New Roman', 'DejaVu Serif'],
+    'font.size': 14,
+    'axes.labelsize': 16,
+    'axes.labelweight': 'bold',
+    'axes.titlesize': 18,
+    'axes.titleweight': 'bold',
+    'xtick.labelsize': 12,
+    'ytick.labelsize': 12,
+    'legend.fontsize': 11,
+    'figure.titlesize': 22,
+    'figure.titleweight': 'bold',
+    'figure.dpi': 150,
+    'savefig.dpi': 300,
+    'savefig.bbox': 'tight',
+})
+
+print("=" * 80)
+print(f"Gassmann Fluid Substitution & Contact Modeling | {RUN_TS}")
+print("=" * 80)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. AUTOMATIC DATA GENERATOR (For Portable execution on GitHub)
+# ─────────────────────────────────────────────────────────────────────────────
+def generate_synthetic_inputs_if_missing():
+    """Generates synthetic CPS3 mapping surfaces if real files are missing."""
+    for cname in ['Ghar_WGC', 'Ghar_WOC', 'AsmariB_WOC']:
+        cps_file = DATA_DIR / f"{cname}.cps3"
+        if not cps_file.exists():
+            np.random.seed(42)
+            # Create a simple CPS3 formatted mapping grid
+            lines = [
+                "FSNROW 40 40\n",
+                "FSLIMI 0.0 15000.0 0.0 15000.0\n",
+                "->\n"
+            ]
+            base_depth = 2100.0 if 'Ghar' in cname else 2350.0
+            for i in range(40):
+                # Simulated dome structural shape
+                x_factor = np.sin(np.linspace(0, np.pi, 40))
+                y_val = np.sin(np.pi * i / 40.0)
+                row_depths = -(base_depth + 150.0 * (x_factor * y_val) + np.random.normal(0, 5, 40))
+                row_str = " ".join([f"{d:.2f}" for d in row_depths]) + "\n"
+                lines.append(row_str)
+            with open(cps_file, 'w', encoding='utf-8') as f:
+                f.writelines(lines)
+            print(f"  [SYNTHETIC] Structural Contact Surface generated: {cname}.cps3")
+
+generate_synthetic_inputs_if_missing()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 4. LOAD PREVIOUS GRIDS OR SYNTHETIC BASELINE
+# ─────────────────────────────────────────────────────────────────────────────
+print("\n" + "─" * 80 + "\n[1] Importing Structural Framework Grids\n" + "─" * 80)
+
+# Try loading grids generated by step9_Paper_D
+XX = np.load(str(NPY_DIR / "XX.npy")) if (NPY_DIR / "XX.npy").exists() else np.meshgrid(np.linspace(0, 15, 201), np.linspace(0, 15, 201))[0]
+YY = np.load(str(NPY_DIR / "YY.npy")) if (NPY_DIR / "YY.npy").exists() else np.meshgrid(np.linspace(0, 15, 201), np.linspace(0, 15, 201))[1]
+
+Zp_2d = np.load(str(NPY_DIR / "Zp_2D.npy")) if (NPY_DIR / "Zp_2D.npy").exists() else np.random.normal(12500, 1200, (201, 201))
+Zs_2d = np.load(str(NPY_DIR / "Zs_2D.npy")) if (NPY_DIR / "Zs_2D.npy").exists() else np.random.normal(7200, 700, (201, 201))
+Por_2d = np.load(str(NPY_DIR / "Porosity_2D.npy")) if (NPY_DIR / "Porosity_2D.npy").exists() else np.random.normal(0.08, 0.02, (201, 201))
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 5. GASSMANN FLUID SUBSTITUTION ENGINE (Theoretical Physics)
+# ─────────────────────────────────────────────────────────────────────────────
+print("\n" + "─" * 80 + "\n[2] Gassmann Fluid Substitution Processing\n" + "─" * 80)
+
+K_min, G_min, rho_min = 94.90, 45.00, 2.870
+K_brine, rho_brine = 2.60, 1.10
+K_oil, rho_oil = 0.80, 0.78
+K_gas, rho_gas = 0.035, 0.25
+
+def gassmann_subst(Vp_in, Vs_in, rho_in, K_mineral, G_mineral, K_fl_orig, K_fl_new, rho_fl_orig, rho_fl_new, phi):
+    phi = np.clip(phi, 0.001, 0.40)
+    rho_si = rho_in * 1000.0
+    G_sat = rho_si * Vs_in**2 / 1e9
+    K_sat = rho_si * (Vp_in**2 - 4.0/3.0 * Vs_in**2) / 1e9
+
+    denom_inv = phi * K_mineral / K_fl_orig + K_sat / K_mineral - 1.0 - phi
+    denom_inv = np.where(np.abs(denom_inv) < 1e-10, 1e-10, denom_inv)
+    K_dry = (K_sat * (phi * K_mineral / K_fl_orig + 1.0 - phi) - K_mineral) / denom_inv
+    K_dry = np.clip(K_dry, 0.1, K_mineral * 0.99)
+
+    denom_fwd = phi / K_fl_new + (1.0 - phi) / K_mineral - K_dry / K_mineral**2
+    denom_fwd = np.where(np.abs(denom_fwd) < 1e-10, 1e-10, denom_fwd)
+    K_sat_new = K_dry + (1.0 - K_dry / K_mineral)**2 / denom_fwd
+    K_sat_new = np.clip(K_sat_new, 0.1, 200.0)
+    
+    rho_new = rho_mineral * (1.0 - phi) + rho_fl_new * phi
+    rho_new_si = rho_new * 1000.0
+
+    Vp_new = np.sqrt((K_sat_new + 4.0/3.0 * G_sat) * 1e9 / rho_new_si)
+    Vs_new = np.sqrt(G_sat * 1e9 / rho_new_si)
+
+    return Vp_new, Vs_new, rho_new, K_sat_new
+
+rho_mineral = rho_min
+phi = np.clip(np.nan_to_num(Por_2d, nan=0.06), 0.001, 0.40)
+rho_sat = rho_min * (1.0 - phi) + rho_brine * phi
+Vp_orig, Vs_orig = Zp_2d / rho_sat, Zs_2d / rho_sat
+
+Vp_oil, Vs_oil, rho_oil_sat, _ = gassmann_subst(Vp_orig, Vs_orig, rho_sat, K_min, G_min, K_brine, K_oil, rho_brine, rho_oil, phi)
+Zp_oil = rho_oil_sat * Vp_oil
+dZp_oil = Zp_oil - Zp_2d
+
+Vp_gas, Vs_gas, rho_gas_sat, _ = gassmann_subst(Vp_orig, Vs_orig, rho_sat, K_min, G_min, K_brine, K_gas, rho_brine, rho_gas, phi)
+Zp_gas = rho_gas_sat * Vp_gas
+dZp_gas = Zp_gas - Zp_2d
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 6. WELL-LOG BASED FLUID SUBSTITUTIONS
+# ─────────────────────────────────────────────────────────────────────────────
+print("\n" + "─" * 80 + "\n[3] Point-by-point Well Substitutions\n" + "─" * 80)
+
+wells_asm = {}
+wells_dir = DATA_DIR / "wells"
+db_file = DATA_DIR / "DB_zonation"
+
+def parse_db_zon(filepath):
+    try:
+        with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
+            lines = f.readlines()
+        headers, data_rows, is_hdr, is_data = [], [], False, False
+        for line in lines:
+            s = line.strip()
+            if not s or s.startswith('#') or s.startswith('VERSION'):
+                continue
+            if s == 'BEGIN HEADER':
+                is_hdr = True; continue
+            if s == 'END HEADER':
+                is_hdr = False; is_data = True; continue
+            if is_hdr:
+                headers.extend(s.split())
+                continue
+            if is_data:
+                parts = s.split()
+                if len(parts) == len(headers):
+                    row_dict = {}
+                    for idx, h in enumerate(headers):
+                        val = parts[idx].strip("'").strip('"')
+                        try:
+                            row_dict[h] = float(val)
+                        except ValueError:
+                            row_dict[h] = val
+                    data_rows.append(row_dict)
+        df = pd.DataFrame(data_rows)
+        if 'Well' in df.columns:
+            df['Well_anon'] = df['Well'].apply(anon)
+        return df
+    except Exception:
+        return None
+
+tops_df = parse_db_zon(db_file)
+
+if wells_dir.exists() and tops_df is not None:
+    for wa in ['Well-A', 'Well-C']:
+        las_file = wells_dir / f"{wa}_WIRE.las"
+        if not las_file.exists():
+            continue
+        
+        # simple parser
+        with open(las_file, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        ascii_idx = next(i for i, line in enumerate(lines) if "~Ascii" in line)
+        cols = ['DEPTH', 'PHIE', 'SW', 'UCS_FINAL', 'E_FINAL', 'YME_DYN', 'SMG_DYN', 'BMK_DYN', 'PR_DYN']
+        data_rows = []
+        for line in lines[ascii_idx+1:]:
+            if line.strip():
+                data_rows.append([float(x) for x in line.split()])
+        
+        df_w = pd.DataFrame(data_rows, columns=cols)
+        df_w['DEPTH_FT'] = df_w['DEPTH'] * M_TO_FT
+        
+        tw = tops_df[tops_df['Well_anon'] == wa]
+        if len(tw) == 0:
+            continue
+        
+        top_md = float(tw[tw['Surface'] == 'Ghar_C.R.']['MD'].iloc[0])
+        bot_md = float(tw[tw['Surface'] == 'Pabdeh']['MD'].iloc[0])
+        da = df_w[(df_w['DEPTH'] >= top_md) & (df_w['DEPTH'] <= bot_md)].copy()
+        
+        if 'BMK_DYN' in da.columns and 'SMG_DYN' in da.columns:
+            logged_por = da['PHIE'].clip(0.001, 0.40).values
+            logged_sw  = da['SW'].clip(0.0, 1.0).values
+            
+            G_w, K_w = da['SMG_DYN'].values, da['BMK_DYN'].values
+            rho_well = rho_min * (1.0 - logged_por) + (logged_sw * rho_brine + (1.0 - logged_sw) * rho_oil) * logged_por
+            da['Vp_measured'] = np.sqrt((K_w + 4.0/3.0 * G_w) * 1e9 / (rho_well * 1000.0))
+            da['Vs_measured'] = np.sqrt(G_w * 1e9 / (rho_well * 1000.0))
+            da['VpVs_calc']   = da['Vp_measured'] / np.where(da['Vs_measured'] > 0, da['Vs_measured'], np.nan)
+            
+            vp_g_w = [gassmann_subst(da['Vp_measured'].iloc[i], da['Vs_measured'].iloc[i], rho_well[i],
+                                    K_min, G_min, K_brine, K_gas, rho_brine, rho_gas, logged_por[i])[0] for i in range(len(da))]
+            da['Vp_gas_sub'] = vp_g_w
+            da['dVp_gas_pct'] = (da['Vp_gas_sub'] - da['Vp_measured']) / da['Vp_measured'] * 100.0
+            wells_asm[wa] = {'df': da}
+            print(f"  ✓ Processed Well Fluid Substitution logs for {wa}")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 7. PARSE CPS3 FLUID CONTACTS FOR 3D VISUALIZATION
+# ─────────────────────────────────────────────────────────────────────────────
+print("\n" + "─" * 80 + "\n[4] Parsing Structural CPS3 Surface Maps\n" + "─" * 80)
+
+def read_cps3_contact(filepath):
+    try:
+        with open(filepath, 'r', errors='replace') as f:
+            lines = f.readlines()
+        vals = []
+        nr, nc, xn, xm, yn, ym = 0, 0, 0.0, 0.0, 0.0, 0.0
+        for i, line in enumerate(lines):
+            if line.startswith('FSNROW'):
+                parts = line.split()
+                nr, nc = int(parts[1]), int(parts[2])
+            if line.startswith('FSLIMI'):
+                parts = line.split()
+                xn, xm, yn, ym = float(parts[1]), float(parts[2]), float(parts[3]), float(parts[4])
+            if line.startswith('->'):
+                for l in lines[i+1:]:
+                    vals.extend([float(v) for v in l.split()])
+                break
+        
+        Z = np.array(vals[:nr*nc]).reshape(nr, nc)
+        Z[Z >= 1e29] = np.nan
+        Z[Z <= -1e29] = np.nan
+        valid_v = Z[~np.isnan(Z)]
+        return {
+            'Z_ft': Z * M_TO_FT, 
+            'mean_ft': float(valid_v.mean() * M_TO_FT) if len(valid_v) > 0 else np.nan,
+            'std_ft': float(valid_v.std() * M_TO_FT) if len(valid_v) > 0 else 0.0
+        }
+    except Exception as e:
+        print(f"  [ERROR] CPS3 parser error on {filepath.name}: {e}")
+        return None
+
+contacts = {}
+for cname in ['Ghar_WGC', 'Ghar_WOC', 'AsmariB_WOC']:
+    cps_file = DATA_DIR / f"{cname}.cps3"
+    if cps_file.exists():
+        res = read_cps3_contact(cps_file)
+        if res is not None:
+            contacts[cname] = res
+            print(f"  ✓ {cname} Surface mapped: Mean TVDss depth = {res['mean_ft']:.1f} ft")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 8. PUBLICATION-QUALITY FIGURES GENERATION
+# ─────────────────────────────────────────────────────────────────────────────
+print("\n" + "─" * 80 + "\n[5] Rendering Wave Velocities & Contact Surfaces\n" + "─" * 80)
+
+rows, cols = Zp_2d.shape
+X_km, Y_km = np.meshgrid(np.linspace(0, 15, cols), np.linspace(0, 15, rows))
+
+# Figure 1: Saturated vs. Dry Wave Velocities Maps
+fig, axes = plt.subplots(2, 3, figsize=(22, 14))
+fig.suptitle(f'Fluid-Substituted P-Wave Velocities Maps\n{FIELD_NAME_ANON}', y=0.98, fontsize=20)
+
+configs = [
+    (Vp_orig, 'Vp Brine Saturation (m/s)', 'viridis', '(a) Baseline Saturated Velocity'),
+    (Vp_oil, 'Vp Oil Saturation (m/s)', 'plasma', '(b) Substituted Oil Velocity'),
+    (Vp_gas, 'Vp Gas Saturation (m/s)', 'hot_r', '(c) Substituted Gas Velocity'),
+    (dZp_oil, 'Delta Zp Brine to Oil (g/cm³·m/s)', 'RdBu_r', '(d) Delta Impedance (Oil)'),
+    (dZp_gas, 'Delta Zp Brine to Gas (g/cm³·m/s)', 'RdBu_r', '(e) Delta Impedance (Gas)'),
+    (Por_2d, 'Porosity (fraction)', 'YlGn', '(f) Matrix Porosity Grid'),
+]
+for idx, (arr, label, cmap, title) in enumerate(configs):
+    ax = axes[idx // 3, idx % 3]
+    im = ax.pcolormesh(X_km, Y_km, arr, cmap=cmap, shading='auto', 
+                       vmin=np.nanpercentile(arr, 2), vmax=np.nanpercentile(arr, 98))
+    cbar = plt.colorbar(im, ax=ax, shrink=0.8, pad=0.03)
+    cbar.set_label(label, size=12)
+    ax.set_title(title)
+    ax.set_xlabel('Easting (km)')
+    ax.set_ylabel('Northing (km)' if idx % 3 == 0 else '')
+
+plt.tight_layout(rect=[0, 0, 1, 0.95])
+fig.savefig(FIG_DIR / "Fig01_Gassmann_maps.png", dpi=300)
+plt.close()
+
+# Figure 2: Well-Based Fluid Substitution Profiles
+if wells_asm:
+    fig, axes = plt.subplots(1, len(wells_asm), figsize=(14, 11), sharey=True)
+    axes = np.atleast_1d(axes)
+    fig.suptitle(f'Logged vs. Gas-Substituted Compressional Waves Profiles\n{FIELD_NAME_ANON}', y=0.98, fontsize=18)
+
+    for idx, (wa, wd) in enumerate(wells_asm.items()):
+        ax = axes[idx]
+        df = wd['df']
+        ax.plot(df['Vp_measured']/1000.0, df['DEPTH_FT'], color='blue', lw=2.0, label='Measured Vp (Brine)')
+        ax.plot(df['Vp_gas_sub']/1000.0, df['DEPTH_FT'], color='red', lw=2.0, ls='--', label='Gassmann Vp (Gas)')
+        ax.invert_yaxis()
+        ax.set_xlabel('P-Wave Velocity (km/s)')
+        ax.set_ylabel('Depth TVD (ft)' if idx == 0 else '')
+        ax.set_title(f'{wa} Substitution Profiles')
+        ax.legend(loc='lower left')
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.savefig(FIG_DIR / "Fig02_well_Gassmann.png", dpi=300)
+    plt.close()
+
+# Figure 3: 3D Surface Projections of Contact Levels
+if contacts:
+    n_c = len(contacts)
+    fig = plt.figure(figsize=(8 * n_c, 7))
+    fig.suptitle(f'3D Geological Contacts & Fluid Envelopes Mapping\n{FIELD_NAME_ANON}', y=0.98, fontsize=18)
+    
+    for idx, (cname, cdata) in enumerate(contacts.items()):
+        ax = fig.add_subplot(1, n_c, idx + 1, projection='3d')
+        Z_surf = cdata['Z_ft']
+        X_s, Y_s = np.meshgrid(np.linspace(0, 15, Z_surf.shape[1]), np.linspace(0, 15, Z_surf.shape[0]))
+        
+        surf = ax.plot_surface(X_s, Y_s, Z_surf, cmap='Blues_r', linewidth=0.3, edgecolors='gray', alpha=0.85)
+        offset_z = np.nanmin(Z_surf) - 100.0
+        ax.contourf(X_s, Y_s, Z_surf, zdir='z', offset=offset_z, cmap='Blues_r', alpha=0.3)
+        
+        ax.set_zlim(offset_z, np.nanmax(Z_surf))
+        ax.set_title(f'{cname}\nMean Depth = {cdata["mean_ft"]:.1f} ft')
+        ax.set_xlabel('Easting (km)')
+        ax.set_ylabel('Northing (km)')
+        ax.set_zlabel('Depth (ft)')
+        ax.view_init(elev=25, azim=-45)
+        
+        cbar = fig.colorbar(surf, ax=ax, shrink=0.5, pad=0.08)
+        cbar.set_label('Depth (ft)', size=10)
+
+    plt.tight_layout()
+    fig.savefig(FIG_DIR / "Fig03_contact_levels.png", dpi=300)
+    plt.close()
+
+# Figure 4: Petrophysical Fluid Discrimination Diagnostic Diagrams
+fig, axes = plt.subplots(2, 2, figsize=(18, 14))
+fig.suptitle(f'Elastic Attribute Lithology & Fluid Separation Diagnostics\n{FIELD_NAME_ANON}', y=0.98, fontsize=18)
+
+ax = axes[0, 0]
+VpVs_valid = (Zp_2d / np.where(Zs_2d > 0, Zs_2d, np.nan)).ravel()
+ax.hist(VpVs_valid[~np.isnan(VpVs_valid)], bins=50, color='darkgray', alpha=0.6, density=True, label='Seismic Scale')
+for wa, wd in wells_asm.items():
+    if 'VpVs_calc' in wd['df']:
+        ax.hist(wd['df']['VpVs_calc'].dropna(), bins=30, alpha=0.5, density=True, label=f'{wa} Log')
+ax.axvline(1.9, color='red', ls='--', lw=2, label='Calcite (1.90)')
+ax.axvline(1.78, color='green', ls=':', lw=2, label='Dolomite (1.78)')
+ax.set_xlabel('Vp/Vs Ratio')
+ax.set_ylabel('Probability Density')
+ax.set_title('(a) Elastic Attribute Vp/Vs Distribution')
+ax.legend()
+
+ax = axes[0, 1]
+if LR_2d is not None and MR_2d is not None:
+    ax.hexbin(MR_2d.ravel()/1e6, LR_2d.ravel()/1e6, gridsize=35, cmap='Blues', mincnt=1)
+ax.set_xlabel('Shear Rigidity μρ (×10⁶)')
+ax.set_ylabel('Fluid Incompressibility λρ (×10⁶)')
+ax.set_title('(b) Lambda-Rho vs. Mu-Rho Grid Space')
+
+ax = axes[1, 0]
+for wa, wd in wells_asm.items():
+    if 'dVp_gas_pct' in wd['df']:
+        ax.hist(wd['df']['dVp_gas_pct'].dropna(), bins=35, alpha=0.5, density=True, label=f'{wa} Gas')
+ax.set_xlabel('Velocity Shift ΔVp (%)')
+ax.set_ylabel('Frequency')
+ax.set_title('(c) Wave Velocity Reduction Profile')
+ax.legend()
+
+ax = axes[1, 1]
+if Por_2d is not None:
+    im = ax.pcolormesh(X_km, Y_km, Por_2d, cmap='YlGn', shading='auto', vmin=0, vmax=0.15)
+    cbar = plt.colorbar(im, ax=ax, shrink=0.8, pad=0.03)
+    cbar.set_label('Porosity (fraction)', size=11)
+ax.set_xlabel('Easting (km)')
+ax.set_title('(d) Porosity Grid Horizon Map')
+
+plt.tight_layout(rect=[0, 0, 1, 0.95])
+fig.savefig(FIG_DIR / "Fig04_fluid_litho_analysis.png", dpi=300)
+plt.close()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 9. OUTPUT QUALITY REPORTING
+# ─────────────────────────────────────────────────────────────────────────────
+print("\n" + "─" * 80 + "\n[6] Documenting Elastic Shift Parameters\n" + "─" * 80)
+
+t1 = pd.DataFrame([
+    {'Fluid': 'Brine', 'K_GPa': K_brine, 'rho_gcc': rho_brine}, 
+    {'Fluid': 'Oil', 'K_GPa': K_oil, 'rho_gcc': rho_oil}, 
+    {'Fluid': 'Gas', 'K_GPa': K_gas, 'rho_gcc': rho_gas}
+])
+t1.to_csv(CSV_DIR / "Table1_fluid_properties.csv", index=False)
+
+t3 = pd.DataFrame([
+    {'Scenario': 'Brine-saturated (Baseline)', 'Vp_mean_ms': round(float(np.nanmean(Vp_orig)), 0), 'Vs_mean_ms': round(float(np.nanmean(Vs_orig)), 0), 'Zp_mean': round(float(np.nanmean(Zp_2d)), 0)},
+    {'Scenario': 'Oil-saturated (Mavko Fwd)',  'Vp_mean_ms': round(float(np.nanmean(Vp_oil)), 0), 'Vs_mean_ms': round(float(np.nanmean(Vs_oil)), 0), 'Zp_mean': round(float(np.nanmean(Zp_oil)), 0)},
+    {'Scenario': 'Gas-saturated (Mavko Fwd)',  'Vp_mean_ms': round(float(np.nanmean(Vp_gas)), 0), 'Vs_mean_ms': round(float(np.nanmean(Vs_gas)), 0), 'Zp_mean': round(float(np.nanmean(Zp_gas)), 0)},
+])
+t3.to_csv(CSV_DIR / "Table3_Gassmann_results.csv", index=False)
+
+t4_rows = []
+for k, v in contacts.items(): 
+    t4_rows.append({
+        'Contact': k, 
+        'Mean_Depth_ft': round(v.get('mean_ft', np.nan), 1), 
+        'Std_ft': round(v.get('std_ft', 0.0), 1)
+    })
+pd.DataFrame(t4_rows).to_csv(CSV_DIR / "Table4_contacts.csv", index=False)
+
+print("\n" + "=" * 80)
+print("  PROCESS COMPLETED: Gassmann Modeling & Contact Mapping Complete.")
+print(f"  Target Run Output: {OUTPUT_DIR}")
+print("=" * 80)
